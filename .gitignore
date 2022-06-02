@@ -2,6 +2,6 @@
 **/core
 **/payload
 **/cyclic
-**/shellcode.exe
-**/shellcode.bin
-**/shellcode.o
+**/*.exe
+**/*.bin
+**/*.o
