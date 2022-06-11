@@ -4,10 +4,14 @@ typedef int s32;
 typedef unsigned int u32;
 typedef unsigned char u8;
 
-u8[400] ebp_40c; // NULL
-
 int get_expr(u8* buffer, int max_length);
 void calc(void);
+struct NumPool {
+    u32 pool[0x90];
+    u32 pool_size;
+};
+
+
 
 int
 main(int argc, char** argv) {
@@ -19,22 +23,21 @@ main(int argc, char** argv) {
 void
 calc(void) {
     char expr_buf[0x400]; // ebp - 0x40c
-    int pool[];           // ebp - 0x59c
-    int pool_idx;         // ebp - 0x5a0
-    int r;
+    struct NumPool num_pool;
+    // num_pool->pool[]:   ebp-0x59c
+    // num_pool->pool_idx: ebp-0x5a0
+
     // calc+20
     bzero(expr_buf, 0x400);
-    while(
-        (int r = get_expr(expr_buf, 0x400)) != 0) {
-
+    while((int r = get_expr(expr_buf, 0x400)) != 0) {
 
         // <calc+83>
-        init_pool(&pool_idx);
-        int parse_result = parse_expr(expr_buf, &pool_idx);
+        init_pool(&num_pool);
+        int parse_result = parse_expr(expr_buf, &num_pool);
         if (parse_result == 0) 
             continue;
-        printf("%d\n", pool[pool_idx-1]);
-        
+        printf("%lu\n", num_pool->pool[pool_size-1]);
+
         // calc + 20
         bzero(expr_buf, 0x400);
     }
@@ -43,15 +46,13 @@ calc(void) {
 }
 
 void
-init_pool(int* param) {
+init_pool(struct NumPool* num_pool) {
     int i = 0; // ebp-0x4
-    *param = 0;
-    while (ebp_4h <= 0x63) {
-        int[] pool = param + 4;
-        pool[i] = 0;
+    num_pool->pool_size; = 0;
+    while (i <= 0x63) {
+        num_pool[i] = 0;
         i++;
     }
-
 }
 
 
@@ -76,49 +77,137 @@ get_expr(u8* buffer, int max_length) {
 
 
 void 
-parse_expr(char* expr_buf, &pool_idx) {
-    char ebp70h[0x64];
-    s32 result;   // ebp - 0x74
+parse_expr(u8* expr_buf, struct NumPool* np) {
+    char local_buf[0x64];
+    s32 atoi_int;   // ebp - 0x74
     u8* heap_obj;    // ebp - 0x78
-    u32 size;   // ebp - 0x7c
-    u32 offset; // ebp - 0x84
-    u32 last_start = glob_buffer; //ebp - 0x88
-    u8* ptr = expr_buf; // ebp - 0x8c, the expression buffer
-    u32* p_poolidx; 
-    // parse_expr+72
-    bzero(ebp70h, 0x64);
-    offset = 0;
-    eax = *(ptr + offset); // parse_expr+101
-    while  (eax - '0' < 9) {
-        // parse_expr+762
-        offset += 1
-    }
-    // parse_expr+119
-    eax = ptr + offset;
-    size = eax - glob_buffer;
-    heap_obj = malloc(size + 1);
+    u32 offset1;   // ebp - 0x7c
+    u32 local_offset = 0; // ebp - 0x80
+    u32 offset0; // ebp - 0x84
+    u8* buf1 = expr_buf; //ebp - 0x88
+    u8* buf0 = expr_buf; // ebp - 0x8c, the expression buffer
+    struct NumPool* num_pool = np; // ebp - 0x90
 
-    // parse_expr+188
-    memcpy(heap_obj, last_start, size); 
-    heap_obj[size] = '\0';
+    // parse_expr+58
+    bzero(local_buf, 0x64);
+    offset0 = 0;
 
-    int r = strcmp(heap_obj, "0");
-    if (r == 0) {
-        // parse_expr+227
-        puts("prevent division by zero");
 
-    }
-    // parse_expr + 262
-    result = atoi(heap_obj);
-    if (result <= 0) {
-       // parse_expr + 314 
+    while (1) {
+        // parse_expr + 87
+        while (*(buf0 + offset0) - '0' < 9) {
+            // parse_expr+762
+            offset0++;
+        }
+        // parse_expr+119
+        offset1 = buf1 - (buf0 + offset0);
+        heap_obj = malloc(offset1 + 1);
+        memcpy(heap_obj, buf1, offset1);
+        heap_obj[offset1] = '\0';
+
+        if (strcmp(heap_obj, "0") == 0) {
+            // parse_expr+227
+            puts("prevent division by zero");
+            fflush(stdout);
+            // jmp parse_expr+ 821
+            // parse_expr+821
+            break;
+        }
+
+        // parse_expr + 262
+        atoi_int = atoi(heap_obj);
+        if (atoi_int > 0) {
+            // parse_expr + 282 
+            num_pool->pool_size += 1;
+            // pase_expr + 301
+            num_pool->pool[num_pool->pool_size - 1] = atoi_int;
+        }
+
+        // parse_expr + 314
+        if (*((char *) (buf0 + offset0)) != 0) {
+            // parse_expr + 335
+            if (*(buf0 + offset0 + 1) - '0' > 9) {
+                // parse_expr + 406
+                puts("expression error"); // e.g. 1 ++ 2
+                fflush(stdout);
+                break;
+            }
+        }
+        // parse_expr + 366
+        buf1 = buf0 + offset0 + 1;
+        // parse_expr + 389
+        if (local_buf[local_offset] != 0) {
+            // 473
+            // u32 idx = buf0[offset0] - 0x25;
+            switch(buf0[offset0]) {
+                case '+':
+                case '-':
+                    // 514
+                    eval(num_pool, local_buf[local_idx]);
+                    local_buf[local_offset] = buf0[offset0];
+                    break;
+                case '%':
+                case '*':
+                case '/':
+                    // 578
+                    if (local_buf[local_offset] != '+' &&
+                            local_buf[local_offset] != '-') {
+                        // 641 
+                        eval(poolidx, local_buf[local_offset]);    
+                        local_buf[local_offset] = buf0[offset0];
+                    } else {
+                        // 608
+                        local_offset ++;
+                        local_buf[local_offset] = buf0[offset0];
+                    }
+                    break;
+                default:
+                    // 702
+                    eval(pool_idx, local_buf[local_idx]);
+                    local_offset -= 1;
+                    break; // jmp 738
+            }
+        } else {
+            // 441
+            local_buf[local_offset] = buf0[offset0];
+        }
+
+        // 738
+        if (buf0[offset0] == 0) {
+            // 810
+            while (local_offset != 0) {
+                // 774
+                eval(pool_idx, local_buf_[local_offset]);
+                local_offset -= 1;
+            }
+            // 816
+            return;
+        } else {
+            // 762
+            offset0 ++;
+            continue;    
+        }
     
-    }
-
-    // parse_expr + 282n
-    *p_poolidx ++;
-
-    // TODO parse_expr + 301?
-    // interesting: +310
+    } // end while loop parse_expr + 87
+    return;
 }
 
+void
+eval(u32* poolidx, char op) {
+    switch(op) {
+        case '+':
+            // 57
+            pool[*poolidx - 2] += pool[*poolidx - 1];
+            break;
+        case '-':
+            //109
+        case '*':
+            //158
+        case '/':
+            //208
+
+        default:
+            break;
+    }
+    //259
+}
