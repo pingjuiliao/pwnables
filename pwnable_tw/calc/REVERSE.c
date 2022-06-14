@@ -78,12 +78,12 @@ get_expr(u8* buffer, int max_length) {
 
 void 
 parse_expr(u8* expr_buf, struct NumPool* np) {
-    char local_buf[0x64];
+    char local_buf[0x64]; // ebp - 0x80
     s32 atoi_int;   // ebp - 0x74
     u8* heap_obj;    // ebp - 0x78
     u32 offset1;   // ebp - 0x7c
     u32 local_offset = 0; // ebp - 0x80
-    u32 offset0; // ebp - 0x84
+    u32 offset0 = 0; // ebp - 0x84
     u8* buf1 = expr_buf; //ebp - 0x88
     u8* buf0 = expr_buf; // ebp - 0x8c, the expression buffer
     struct NumPool* num_pool = np; // ebp - 0x90
@@ -95,7 +95,7 @@ parse_expr(u8* expr_buf, struct NumPool* np) {
 
     while (1) {
         // parse_expr + 87
-        while (*(buf0 + offset0) - '0' < 9) {
+        while (buf0[offset0] - '0' < 9) {
             // parse_expr+762
             offset0++;
         }
@@ -119,6 +119,7 @@ parse_expr(u8* expr_buf, struct NumPool* np) {
         if (atoi_int > 0) {
             // parse_expr + 282 
             num_pool->pool_size += 1;
+
             // pase_expr + 301
             num_pool->pool[num_pool->pool_size - 1] = atoi_int;
         }
@@ -143,7 +144,7 @@ parse_expr(u8* expr_buf, struct NumPool* np) {
                 case '+':
                 case '-':
                     // 514
-                    eval(num_pool, local_buf[local_idx]);
+                    eval(&num_pool, local_buf[local_idx]);
                     local_buf[local_offset] = buf0[offset0];
                     break;
                 case '%':
@@ -153,7 +154,7 @@ parse_expr(u8* expr_buf, struct NumPool* np) {
                     if (local_buf[local_offset] != '+' &&
                             local_buf[local_offset] != '-') {
                         // 641 
-                        eval(poolidx, local_buf[local_offset]);    
+                        eval(&num_pool, local_buf[local_offset]);    
                         local_buf[local_offset] = buf0[offset0];
                     } else {
                         // 608
@@ -163,7 +164,7 @@ parse_expr(u8* expr_buf, struct NumPool* np) {
                     break;
                 default:
                     // 702
-                    eval(pool_idx, local_buf[local_idx]);
+                    eval(&num_pool, local_buf[local_offset]);
                     local_offset -= 1;
                     break; // jmp 738
             }
@@ -177,7 +178,7 @@ parse_expr(u8* expr_buf, struct NumPool* np) {
             // 810
             while (local_offset != 0) {
                 // 774
-                eval(pool_idx, local_buf_[local_offset]);
+                eval(, local_buf_[local_offset]);
                 local_offset -= 1;
             }
             // 816
