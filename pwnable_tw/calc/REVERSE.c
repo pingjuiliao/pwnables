@@ -36,7 +36,7 @@ calc(void) {
         int parse_result = parse_expr(expr_buf, &num_pool);
         if (parse_result == 0) 
             continue;
-        printf("%lu\n", num_pool->pool[pool_size-1]);
+        printf("%d\n", num_pool->pool[pool_size-1]);
 
         // calc + 20
         bzero(expr_buf, 0x400);
@@ -78,7 +78,7 @@ get_expr(u8* buffer, int max_length) {
 
 void 
 parse_expr(u8* expr_buf, struct NumPool* np) {
-    char local_buf[0x64]; // ebp - 0x80
+    char local_buf[0x64]; // ebp - 0x70
     s32 atoi_int;   // ebp - 0x74
     u8* heap_obj;    // ebp - 0x78
     u32 offset1;   // ebp - 0x7c
@@ -194,14 +194,18 @@ parse_expr(u8* expr_buf, struct NumPool* np) {
 }
 
 void
-eval(u32* poolidx, char op) {
+eval(struct NumPool *num_pool, char op) {
     switch(op) {
         case '+':
             // 57
-            pool[*poolidx - 2] += pool[*poolidx - 1];
+            num_pool->pool[num_pool->pool_size - 2] += \
+                        num_pool->pool[num_pool->pool_size - 1];
             break;
         case '-':
             //109
+            num_pool->pool[num_pool->pool_size - 2] += \
+                        num_pool->pool[num_pool->pool_size - 1];
+            break; 
         case '*':
             //158
         case '/':
