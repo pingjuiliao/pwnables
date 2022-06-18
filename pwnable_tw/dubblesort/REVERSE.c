@@ -21,7 +21,7 @@ main(int argc, char** argv) {
   printf("What your name :");
   read(0,name_buffer,0x40);
   printf("Hello %s,How many numbers do you what to sort :",name_buffer);
-  scanf("%u",&array_size);
+  scanf("%u", &array_size);
   if (array_size != 0) {
     uint *puVar3 = array; // edi
     uint uVar2 = 0; // esi
